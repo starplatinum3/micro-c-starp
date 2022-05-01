@@ -347,6 +347,16 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
                 
                 else storeCmped  
           loop storeAssigned
+    | DoWhile(body,cmpStmt) -> 
+        // 他要先做一个body的事情
+      
+        let rec loop storeOrigin =
+                    //求值 循环条件,注意变更环境 store
+                let (cmpedRes, cmpedStore) = eval cmpStmt locEnv gloEnv storeOrigin
+                    // 继续循环
+                if cmpedRes<>0 then loop (exec body locEnv gloEnv cmpedStore)
+                        else cmpedStore  //退出循环返回 环境cmpedStore
+        loop (exec body locEnv gloEnv store)
 
 and stmtordec stmtordec locEnv gloEnv store =
     match stmtordec with

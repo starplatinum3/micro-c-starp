@@ -23,7 +23,7 @@ let nl = CstI 10 //  \n 的 ASCII 码
 %token <int> CSTINT CSTBOOL  // <int> 是词元的语义值类型
 %token <string> CSTSTRING NAME
 
-%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE
+%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO
 %token PLUS MINUS TIMES DIV MOD
 %token EQ NE GT LT GE LE
 %token NOT SEQOR SEQAND
@@ -141,6 +141,9 @@ StmtM:  /* No unbalanced if-else */
   | RETURN Expr SEMI                    { Return(Some($2))     }
   | Block                               { $1                   }
   | IF LPAR Expr RPAR StmtM ELSE StmtM  { If($3, $5, $7)       }
+  | DO StmtM WHILE LPAR Expr RPAR SEMI  { DoWhile($2, $5)        }
+  // 5 是判断LPAR Expr RPAR  ，左右值判断
+
     // https://blog.csdn.net/weixin_42804814/article/details/94913013
   // 逻辑分区  LPAR
   // 不应该啊 这里应该是 left part 和 right part 的意思吧 左值 右值
