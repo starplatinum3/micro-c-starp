@@ -29,6 +29,8 @@ let keyword s =
     | "true"    -> CSTBOOL 1
     | "for"     -> FOR
     | "void"    -> VOID 
+    | "until"   -> UNTIL
+    | "doUntil" -> DOUNTIL
     | "do"      -> DO  
     // | "doWhile" -> DOWHILE 
     | "dowhile" -> DOWHILE 

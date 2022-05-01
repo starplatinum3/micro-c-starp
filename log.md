@@ -160,3 +160,64 @@ PS D:\proj\compile\plzoofs\microc>  ./bin/Debug/net6.0/interpc.exe example/doWhi
 Micro-C interpreter v 1.1.0 of 2021-5-19
 interpreting example/doWhileTest.c ...inputargs:[8]
 0 1 2 3 4 5 6 7 
+
+
+
+代码位置
+
+PS D:\proj\compile\plzoofs\microc
+
+
+
+until 是一个token，需要定义
+
+LE DO DOUNTIL UNTIL
+
+    “D:\proj\compile\plzoofs\microc\interpc.fsproj”(默认目标) (1:7) ->
+       (CallFsYacc 目标) ->
+         FSYACC : error FSY000: NonTerminal 'UNTIL' has no productions [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+         C:\Users\iot421\.nuget\packages\fslexyacc\10.2.0\build\FsLexYacc.targets(53,3): error MSB3073: 命令“dotnet "C:\Users\iot421\.nuget\packages\fslexyacc\10.2.0\build\/fsyacc/netcoreapp3.1\fsyacc.dll"  -o "CPar.fs" --module CPar CPar.fsy”已退出，代码为 1。 [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+
+
+​    
+
+./bin/Debug/net6.0/interpc.exe example/testDoUntil.c 8
+
+
+
+PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example/testDoUntil.c 8
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example/testDoUntil.c ...inputargs:[8]
+ERROR: parse error in file example/testDoUntil.c near line 10, column 9
+
+大概是until
+
+这里没定义
+
+CLex.fs
+
+
+
+测试 doUtil
+
+```c
+void main(int n)
+{
+    int i;
+    i = 0;
+    do
+    {
+        print i;
+        i = i + 1;
+    }
+    until(i > n);
+}
+
+```
+
+输出
+
+PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example/testDoUntil.c 8
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example/testDoUntil.c ...inputargs:[8]
+0 1 2 3 4 5 6 7 8 

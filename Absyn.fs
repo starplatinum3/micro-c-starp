@@ -40,7 +40,8 @@ and stmt =
   | Block of stmtordec list          (* Block: grouping and scope   *)
   // 语句块内部，可以是变量声明 或语句的列表                       
   | For of expr * expr  * expr * stmt       
-  | DoWhile of  stmt * expr                                 
+  | DoWhile of  stmt * expr     
+  | DoUntil of stmt * expr                            
 
 and stmtordec =                                                    
   | Dec of typ * string              (* Local variable declaration  *)

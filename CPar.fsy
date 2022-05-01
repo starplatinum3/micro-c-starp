@@ -23,7 +23,7 @@ let nl = CstI 10 //  \n 的 ASCII 码
 %token <int> CSTINT CSTBOOL  // <int> 是词元的语义值类型
 %token <string> CSTSTRING NAME
 
-%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO
+%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO DOUNTIL UNTIL
 %token PLUS MINUS TIMES DIV MOD
 %token EQ NE GT LT GE LE
 %token NOT SEQOR SEQAND
@@ -149,6 +149,7 @@ StmtM:  /* No unbalanced if-else */
   // 不应该啊 这里应该是 left part 和 right part 的意思吧 左值 右值
   // 这是解释还是什么 看不懂。。
   | WHILE LPAR Expr RPAR StmtM          { While($3, $5)        }
+  | DO StmtM UNTIL LPAR Expr RPAR SEMI   { DoUntil($2, $5)        }
   // whilen 左值 和右值 做操作， 就做body的语句
   // while 左值 表达式 右边的值 语句 M是什么 某种指代吧 和 x类似？ 猜的。。
   | FOR LPAR Expr SEMI Expr SEMI Expr RPAR StmtM     { For($3,$5,$7,$9)  }
