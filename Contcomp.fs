@@ -19,6 +19,22 @@
    Pass 2: compile the statements in the given environments.
  *)
 
+(*文件micro/Contcomp.fs）
+micro-C的一个基于延续的（向后）编译器
+将C语言转换为抽象机器。
+sestoft@itu.dk * 2011-11-10
+抽象机器代码是向后生成的，因此可以跳到
+跳跃可以被消除，这样尾巴就可以立即呼叫
+然后返回）可以被识别，死代码可以被消除，
+等
+一个块的汇编，其中可能包含
+声明和声明，分两步进行：
+过程1：详细声明，以找到
+每一项声明都必须经过汇编；也翻译
+将声明转换为分配指令，类型为
+bstmtordec。
+过程2：在给定的环境中编译语句。
+*)
 module Contcomp
 
 open System.IO
@@ -240,6 +256,19 @@ and bStmtordec stmtOrDec varEnv : bstmtordec * VarEnv =
    actually achieve this in a different way.
  *)
 
+(*编译micro-C表达式：
+*e是要编译的表达式
+*varEnv是编译时变量环境
+*funEnv是编译时环境
+*C是这个表达式的代码后面的代码
+净效应原理：如果
+表达式e返回指令序列instrs，然后
+指令的执行与指令具有相同的效力
+首先计算堆栈上表达式e的值的序列
+top然后执行C，但由于优化，instrs可能会
+实际上，要以不同的方式实现这一点。
+*)
+
 and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : instr list =
     match e with
     | Access acc     -> cAccess acc varEnv funEnv (LDI :: C)
@@ -256,6 +285,7 @@ and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : inst
     | Prim2(ope, e1, e2) ->
       cExpr e1 varEnv funEnv
         (cExpr e2 varEnv funEnv
+        // 什么操作符
            (match ope with
             | "*"   -> MUL  :: C
             | "+"   -> ADD  :: C
@@ -269,6 +299,19 @@ and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : inst
             | ">"   -> SWAP :: LT :: C
             | "<="  -> SWAP :: LT :: addNOT C
             | _     -> failwith "unknown primitive 2"))
+            // is?do:not
+    // | Prim3(e1, e2 , e3) ->
+    //   let (i1, store1) = eval e1 locEnv gloEnv store
+    //   let (i2, store2) = eval e2 locEnv gloEnv store1
+    //   let (i3, store3) = eval e3 locEnv gloEnv store2
+    //   if i1 = 0 then (i2,store3) else (i3,store3) 
+
+    //   let (i1, store1) = eval e1 locEnv gloEnv store
+    //   let (i2, store2) = eval e2 locEnv gloEnv store1
+    //   let (i3, store3) = eval e3 locEnv gloEnv store2
+    //   if i1 = 0 then (i2,store3) else (i3,store3) 
+                // if 表达式需要具有类型“instr list”才能满足上下文类型要求。当前的类型为“'a * 'b”。F# Compiler1
+ 
     | Andalso(e1, e2) ->
       match C with
       | IFZERO lab :: _ ->

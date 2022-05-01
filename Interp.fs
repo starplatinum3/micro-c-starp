@@ -278,7 +278,33 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
             exec stmt1 locEnv gloEnv store1 //True分支
         else
             exec stmt2 locEnv gloEnv store1 //False分支
+            // 不能写在这里吧
+//     | Prim3(e, stmt1, stmt2) ->
+//     // 他不应该返回 表达式 而是返回stmt 
+//     // https://www.codenong.com/34315299/
+// //     此表达式应具有类型
+// //     “stmt”    
+// // 而此处具有类型
+// //     “expr”  
+      
+//         let (v, store1) = eval e locEnv gloEnv store
 
+//         // if v <> 0 then
+//         //     exec stmt1 locEnv gloEnv store1 //True分支
+//         // else
+//         //     exec stmt2 locEnv gloEnv store1 //False分支
+
+//         // let (v, store1) = eval e locEnv gloEnv store
+
+//         if v <> 0 then
+//             // exec stmt1 locEnv gloEnv store1 //True分支
+//             let (v, store2) = eval stmt1 locEnv gloEnv store
+//             store2
+//         else
+//             // exec stmt2 locEnv gloEnv store1 //False分支
+//             let (v, store3) = eval stmt2 locEnv gloEnv store
+//             store3
+    
     | While (e, body) ->
 
         //定义 While循环辅助函数 loop
@@ -368,6 +394,20 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
       loop (exec body locEnv gloEnv store)
     //   不管三七二十一 先做一下
 
+    // 这是不对的
+//     | Prim3(e1, e2 , e3) ->
+//     // https://www.codenong.com/34315299/
+// //     此表达式应具有类型
+// //     “stmt”    
+// // 而此处具有类型
+// //     “expr”  
+
+//         let (i1, store1) = eval e1 locEnv gloEnv store
+//         // let (i2, store2) = eval e2 locEnv gloEnv store1
+//         // let (i3, store3) = eval e3 locEnv gloEnv store2
+//         if i1 = 0 then e2
+//                   else e3
+
 and stmtordec stmtordec locEnv gloEnv store =
     match stmtordec with
     | Stmt stmt -> (locEnv, exec stmt locEnv gloEnv store)
@@ -427,8 +467,35 @@ and eval e locEnv gloEnv store : int * store =
             | ">=" -> if i1 >= i2 then 1 else 0
             | ">" -> if i1 > i2 then 1 else 0
             | _ -> failwith ("unknown primitive " + ope)
-
+    
         (res, store2)
+    | Prim3(e, stmt1, stmt2) ->
+    // 他不应该返回 表达式 而是返回stmt 
+    // https://www.codenong.com/34315299/
+//     此表达式应具有类型
+//     “stmt”    
+// 而此处具有类型
+//     “expr”  
+      
+        let (v, store1) = eval e locEnv gloEnv store
+
+        // if v <> 0 then
+        //     exec stmt1 locEnv gloEnv store1 //True分支
+        // else
+        //     exec stmt2 locEnv gloEnv store1 //False分支
+
+        // let (v, store1) = eval e locEnv gloEnv store
+
+        if v <> 0 then
+            // exec stmt1 locEnv gloEnv store1 //True分支
+            let (v2, store2) = eval stmt1 locEnv gloEnv store
+            // store2
+            (v2, store2)
+        else
+            // exec stmt2 locEnv gloEnv store1 //False分支
+            let (v3, store3) = eval stmt2 locEnv gloEnv store
+            // store3
+            (v3, store3)
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store
 

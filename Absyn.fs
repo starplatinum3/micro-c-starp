@@ -23,6 +23,9 @@ and expr =                           // 表达式，右值
   | CstI of int                      (* Constant                    *)
   | Prim1 of string * expr           (* Unary primitive operator    *)
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
+  | Prim3 of expr * expr * expr      
+  // | Prim3 of stmt * expr * expr      
+  // | Prim3 of expr * stmt * stmt      
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
@@ -41,7 +44,8 @@ and stmt =
   // 语句块内部，可以是变量声明 或语句的列表                       
   | For of expr * expr  * expr * stmt       
   | DoWhile of  stmt * expr     
-  | DoUntil of stmt * expr                            
+  | DoUntil of stmt * expr    
+  // | Prim3 of expr * stmt * stmt                             
 
 and stmtordec =                                                    
   | Dec of typ * string              (* Local variable declaration  *)

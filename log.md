@@ -221,3 +221,47 @@ PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example/testDo
 Micro-C interpreter v 1.1.0 of 2021-5-19
 interpreting example/testDoUntil.c ...inputargs:[8]
 0 1 2 3 4 5 6 7 8 
+
+
+
+ ./bin/Debug/net6.0/interpc.exe example/testPrim3.c 8  
+
+这好像不能解析
+
+print n > 5 ? 1 : 0;
+
+
+
+一开始把他当作是stmt了，但是后来发现他要返回东西的 所以是expr
+
+
+
+测试
+
+```c
+void main(int n)
+{
+
+     int res;
+     res=n > 5 ? 1 : 0;
+    //  他要返回一个值的 貌似不是stmt ，而是表达式吧。。？
+     print res;
+    // print n > 5 ? 1 : 0;
+  
+}
+
+```
+
+输出
+
+PS D:\proj\compile\plzoofs\microc>  ./bin/Debug/net6.0/interpc.exe example/testPrim3.c 8
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example/testPrim3.c ...inputargs:[8]
+1 
+
+
+
+PS D:\proj\compile\plzoofs\microc>  ./bin/Debug/net6.0/interpc.exe example/testPrim3.c 1  
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example/testPrim3.c ...inputargs:[1]
+0 
