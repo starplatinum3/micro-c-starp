@@ -43,6 +43,10 @@ type token =
   | DO
   | DOUNTIL
   | UNTIL
+  | PRINTF
+  | STRING
+  | PRINT_CHAR
+  | CSTCHAR of (char)
   | CSTSTRING of (string)
   | NAME of (string)
   | CSTINT of (int)
@@ -90,6 +94,10 @@ type tokenId =
     | TOKEN_DO
     | TOKEN_DOUNTIL
     | TOKEN_UNTIL
+    | TOKEN_PRINTF
+    | TOKEN_STRING
+    | TOKEN_PRINT_CHAR
+    | TOKEN_CSTCHAR
     | TOKEN_CSTSTRING
     | TOKEN_NAME
     | TOKEN_CSTINT
@@ -113,11 +121,14 @@ type nonTerminalId =
     | NONTERM_StmtU
     | NONTERM_Expr
     | NONTERM_ExprNotAccess
+    | NONTERM_PrintfArgs
     | NONTERM_AtExprNotAccess
     | NONTERM_Access
     | NONTERM_Exprs
     | NONTERM_Exprs1
     | NONTERM_Const
+    | NONTERM_ConstString
+    | NONTERM_ConstChar
     | NONTERM_Type
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

@@ -20,10 +20,15 @@ let compose1 f (g, s) = ((fun x -> g(f(x))), s)
 let nl = CstI 10 //  \n 的 ASCII 码
 %}
 
+// 这是说他的f# 类型吗？ 不懂
+// name 是什么
 %token <int> CSTINT CSTBOOL  // <int> 是词元的语义值类型
 %token <string> CSTSTRING NAME
+// 这里是否可以把语言的char 和f# 的char 对应？
+%token <char> CSTCHAR
 
-%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO DOUNTIL UNTIL
+// 定义 token
+%token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO DOUNTIL UNTIL PRINTF  STRING PRINT_CHAR
 %token PLUS MINUS TIMES DIV MOD
 %token EQ NE GT LT GE LE
 %token NOT SEQOR SEQAND
@@ -81,6 +86,7 @@ Vardec:
 
 /*
  变量描述
+ name 就是变量的名字
 NAME  "n"   (fun t->t, "n") 返回一个元组，第一个元素，是类型构造函数，在Vardec 规则中使用
 */ 
 
@@ -179,8 +185,14 @@ ExprNotAccess:
   | Expr QUESTION Expr COLON Expr       { Prim3($1,$3,$5)     }
   // 表达式 ?表达式:表达式
   // 判断
+  
   | PRINT Expr                          { Prim1("printi", $2) }
+  // printi 只有这里可以调用吗 外面不行。。
+  // print int 然后第二个参数
   | PRINTLN                             { Prim1("printc", nl) }
+  | PRINTF LPAR CSTSTRING PrintfArgs RPAR  { Printf($3, $4)}
+  | PRINT_CHAR  Expr   { Prim1("printc", $2)}
+  // 这里不写大写行不行。。
   | Expr PLUS  Expr                     { Prim2("+",  $1, $3) }
   | Expr MINUS Expr                     { Prim2("-",  $1, $3) }
   | Expr TIMES Expr                     { Prim2("*",  $1, $3) }
@@ -194,8 +206,15 @@ ExprNotAccess:
   | Expr LE    Expr                     { Prim2("<=", $1, $3) }
   | Expr SEQAND Expr                    { Andalso($1, $3)     }
   | Expr SEQOR  Expr                    { Orelse($1, $3)      }
+  // | ConstString SEQOR  Expr                    { Orelse($1, $3)      }
 ;
 
+PrintfArgs:
+	// 连接两个列表。 @
+  // Printf("%d",intArg,charArg);
+  // 递归的 后面会有很多参数
+  | COMMA Expr PrintfArgs               { [$2] @ $3 }
+; 
 AtExprNotAccess:
     //不可以为左值的的基本情况 
     // Const ,  3
@@ -204,6 +223,11 @@ AtExprNotAccess:
     Const                               { CstI $1             }
   | LPAR ExprNotAccess RPAR             { $2                  } 
   | AMP Access                          { Addr $2             } // 取地址
+  // | ConstChar                           { CstChar($1) }
+  | ConstChar                           { CstChar $1 }
+  // 表达式去取
+  | ConstString { CstString($1) }      
+  // | ConstString                         { CstS $1 }           
 ;
 
 Access:    //可以为左值的情况
@@ -229,9 +253,20 @@ Const:
   | CSTBOOL                             { $1       }
   | MINUS CSTINT                        { - $2     }
   | NULL                                { -1       }
+  // | CSTSTRING                              { $1       }
+  //  D:\proj\compile\plzoofs\microc\CPar.fsy(236,67): error FS0001: 此表达式应具有类型    “int”    而此处具有类型    “string” [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+;
+
+ConstString:
+    CSTSTRING                           { $1       }
+;
+
+ConstChar:
+  CSTCHAR                               { $1       }
 ;
 
 Type:
     INT                                 { TypI     }
   | CHAR                                { TypC     }
+  | STRING                              { TypString     }
 ;

@@ -265,3 +265,160 @@ PS D:\proj\compile\plzoofs\microc>  ./bin/Debug/net6.0/interpc.exe example/testP
 Micro-C interpreter v 1.1.0 of 2021-5-19
 interpreting example/testPrim3.c ...inputargs:[1]
 0 
+
+
+
+./bin/Debug/net6.0/interpc.exe example\charArrTest.c
+
+不行
+
+
+
+./bin/Debug/net6.0/interpc.exe example/testString.c 1   
+
+
+
+尝试 字符串
+
+编译
+
+dotnet build -v n interpc.fsproj
+
+
+
+  D:\proj\compile\plzoofs\microc\CLex.fsl(37,20): error FS0039: 未定义值或构造函数“STRING”。 你可能需要以下之一:   string   String   sinh   stdin   CSTINT [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+
+
+
+配置类型
+
+Type:
+
+  INT                 { TypI   }
+
+ | CHAR                { TypC   }
+
+CPar.fsy
+
+
+
+1>FSYACC : error FSY000: NonTerminal 'STRING' has no productions [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+
+
+
+看不懂 为什么他的int就可以。。
+
+
+
+| '"'       { CSTSTRING (String [] lexbuf) }  // 调用字符串处理规则
+
+这里来开始调用const String
+
+
+
+char arr 是不是要尝试 int 的arr那样，要找找 int arr
+
+
+
+ D:\proj\compile\plzoofs\microc\Interp.fs(241,33): error FS0039: 未定义值或构造函数“CHAR”。 你可能需要以下之一:   char   CPar [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+
+
+
+./bin/Debug/net6.0/interpc.exe example\testChar.c 1 
+
+ERROR: Lexer error: illegal symbol in file example\testChar.c near line 4, column 8
+
+
+
+./bin/Debug/net6.0/interpc.exe example\array.c 1 
+
+PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example\array.c   
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example\array.c ...inputargs:[]
+9 
+
+int 可以 只有int 一种类型吗。。
+
+
+
+ Debug.fs
+         CPar.fs
+         CLex.fs
+         Parse.fs
+         Machine.fs
+         Interp.fs
+
+build的时候有       Machine.fs ，应该没有    Machine.java吧、、
+
+
+
+```c
+void main(int n)
+{
+    char ch;
+    // ch='1';
+    // 是说单引号不对吗
+    // ERROR: Lexer error: illegal symbol in file example\testChar.c near line 4, column 8
+
+    print ch;
+}
+
+```
+
+PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example\testChar.c 1 
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example\testChar.c ...inputargs:[1]
+0 
+
+这样赋值没有问题，那么是解析单引号的时候出问题了
+
+ ./bin/Debug/net6.0/interpc.exe example\testChar.c 1 
+
+ ./bin/Debug/net6.0/interpc.exe example\testString.c 1 
+
+ ./bin/Debug/net5.0/interpc.exe example\testChar.c 1 
+
+PS D:\proj\compile\micro-c\microc>  ./bin/Debug/net5.0/interpc.exe example\testChar.c 1 
+It was not possible to find any compatible framework version
+The framework 'Microsoft.NETCore.App', version '5.0.0' (x64) was not found.
+
+  - The following frameworks were found:
+      6.0.3 at [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+
+You can resolve the problem by installing the specified framework and/or SDK.
+
+
+
+测试 打印char，
+
+```c
+void main(int n)
+{
+    char ch;
+    // ch='1';
+    // 是说单引号不对吗
+    // ERROR: Lexer error: illegal symbol in file example\testChar.c near line 4, column 8
+    // ch = "1";
+    // ch = "c";
+// ch="c";
+ch='c';
+    // print ch;
+// println ch;
+// printc ch;
+printCh ch;
+}
+
+```
+
+PS D:\proj\compile\plzoofs\microc>  ./bin/Debug/net6.0/interpc.exe example\testChar.c 1
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example\testChar.c ...inputargs:[1]
+c
+
+
+
+一旦他可以打印char ，那么什么都可以打印了，函数只要在c代码层定义，而不需要写f# 代码了
+
+  ./bin/Debug/net6.0/interpc.exe example\testPrintf.c 1
+
+example\testPrintf.c

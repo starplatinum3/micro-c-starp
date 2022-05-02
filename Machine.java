@@ -141,7 +141,7 @@ class Machine {
   }
 
   // Print the stack machine instruction at p[pc]
-
+// 编译的时候 应该没有调用这个java代码吧。。 这里应该不用改吧。。
   static String insname(int[] p, int pc) {
     switch (p[pc]) {
     case CSTI:   return "CSTI " + p[pc+1]; 

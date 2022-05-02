@@ -108,6 +108,7 @@ and allocate (kind: int -> Var) (typ, x) (varEnv: VarEnv) : VarEnv * instr list 
     | TypA (TypA _, _) -> raise (Failure "allocate: array of arrays not permitted")
     | TypA (t, Some i) ->
         let newEnv =
+        // 空闲到+i的位置  某种类型的 
             ((x, (kind (newloc + i), typ)) :: env, newloc + i + 1) //数组内容占用 i个位置,数组变量占用1个位置
 
         let code = [ INCSP i; GETSP; OFFSET(i - 1); SUB ]
@@ -224,6 +225,16 @@ and cStmtOrDec stmtOrDec (varEnv: VarEnv) (funEnv: FunEnv) : VarEnv * instr list
    stack top (and thus extend the current stack frame with one element).
 *)
 
+(*编译micro-C表达式：
+*e是要编译的表达式
+*varEnv是局部和全局变量环境
+*funEnv是全球功能环境
+净效果原则：如果
+表达式e返回指令序列instrs，然后
+instrs的执行将使表达式e的右值保留在
+堆栈顶部（从而用一个元素扩展当前堆栈框架）。
+*)
+
 and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
     match e with
     | Access acc -> cAccess acc varEnv funEnv @ [ LDI ]
@@ -231,6 +242,9 @@ and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
         cAccess acc varEnv funEnv
         @ cExpr e varEnv funEnv @ [ STI ]
     | CstI i -> [ CSTI i ]
+    | CstChar c -> 
+        let c = (int c)
+        [ CSTI c ]
     | Addr acc -> cAccess acc varEnv funEnv
     | Prim1 (ope, e1) ->
         cExpr e1 varEnv funEnv

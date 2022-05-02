@@ -7,6 +7,7 @@ void main(int n) {
     print i;
     print fib(i);
     println;
+    // 只能打印一个ln 不能 打印字符
     i = i + 1;
   }
 }

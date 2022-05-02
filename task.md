@@ -5,8 +5,8 @@
 
 ### 语法
 
-- do while/until/for 语法
-- 三目运算  ? :
+- [x] do while/until/for 语法
+- [x] 三目运算  ? :
 - 变量初始化
 - 字符串支持
   - 模板字符串

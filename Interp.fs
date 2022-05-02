@@ -52,6 +52,7 @@ module Interp
 
 open Absyn
 open Debug
+open System
 
 (* Simple environment operations *)
 // 多态类型 env
@@ -222,6 +223,12 @@ let rec bindVars xs vs locEnv store : locEnv * store =
    that it maps variable to next available store location, and
    initialize store location(s).
  *)
+
+(*分配变量（int或指针或数组）：扩展环境以便
+将变量映射到下一个可用的存储位置，以及
+初始化存储位置。
+*)
+
 //
 
 let rec allocate (typ, x) (env0, nextloc) sto0 : locEnv * store =
@@ -229,9 +236,12 @@ let rec allocate (typ, x) (env0, nextloc) sto0 : locEnv * store =
     let (nextloc1, v, sto1) =
         match typ with
         //数组 调用 initSto 分配 i 个空间
+        // 长度是怎么样的。。 int 的长度和char 的长度有区别吗
         | TypA (t, Some i) -> (nextloc + i, nextloc, initSto nextloc i sto0)
         // 常规变量默认值是 0
+        // | TypC   -> (nextloc,  (CHAR (char 0)),sto0)
         | _ -> (nextloc, 0, sto0)
+        // 如果是char 呢
 
     msg $"\nalloc:\n {((typ, x), (env0, nextloc), sto0)}\n"
     bindVar x v (env0, nextloc1) sto1
@@ -426,6 +436,14 @@ and eval e locEnv gloEnv store : int * store =
         let (res, store2) = eval e locEnv gloEnv store1
         (res, setSto store2 loc res)
     | CstI i -> (i, store)
+    // | ConstChar c    -> (CHAR c, store)
+    // | CstChar c   -> (CHAR c, store)
+    // | CstChar c   -> (char c, store)
+    // | CstChar c   -> ( c, store)
+    | CstChar c   -> ( int c, store)
+    // 返回 int 和store  : int * store
+    // 此表达式应具有类型    “int”    而此处具有类型    “char” 
+        //  D:\proj\compile\plzoofs\microc\Interp.fs(439,23): error FS0039: 未定义值或构造函数“CHAR”。 你可能需要以下之一:   char   CPar [D:\proj\compile\plzoofs\microc\interpc.fsproj]
     | Addr acc -> access acc locEnv gloEnv store
     | Prim1 (ope, e1) ->
         let (i1, store1) = eval e1 locEnv gloEnv store
@@ -441,6 +459,7 @@ and eval e locEnv gloEnv store : int * store =
             | "printi" ->
                 (printf "%d " i1
                  i1)
+                //  就是打印数字形式的 而且还返回？
             | "printc" ->
             // 这是强转？
                 (printf "%c" (char i1)
@@ -496,6 +515,29 @@ and eval e locEnv gloEnv store : int * store =
             let (v3, store3) = eval stmt2 locEnv gloEnv store
             // store3
             (v3, store3)
+    | Printf (s, exprs) ->
+        let rec evalExprs exprs store1 =  // 循环计算printf后面所有表达式的值
+            match exprs with
+            | e :: tail ->  
+                let (v, store2) = eval e locEnv gloEnv store1 
+                let (vlist, store3) = evalExprs tail store2
+                ([v] @ vlist, store3)
+            | [] -> ([], store1)
+        let (evals, store1) = evalExprs exprs store
+
+
+        let getPrintString =
+            let mutable i = 0
+            let slist = s.Split('%')
+            let mutable resString = slist.[0]
+            let mutable i = 1
+            while i < slist.Length do
+                resString <- resString + evals.[i-1].ToString() + slist.[i].[1..]
+                i <- i + 1
+            printf "%s" resString
+            1  // 返回1
+        (getPrintString, store1)
+
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store
 
