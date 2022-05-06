@@ -42,8 +42,8 @@ and expr =                           // 表达式，右值
   // 这里做里面的操作
                                                                    
 and access =                         //左值，存储的位置                                            
-  | AccVar of string                 (* Variable access        x    *) 
-  | AccDeref of expr                 (* Pointer dereferencing  *p   *)
+  | AccVar of string                 (* Variable access        x  （*可变访问x*）  *) 
+  | AccDeref of expr                 (* Pointer dereferencing  *p  （*指针解引用*p*） *)
   | AccIndex of access * expr        (* Array indexing         a[e] *)
                                                                    
 and stmt =                                                         

@@ -182,6 +182,7 @@ ExprNotAccess:
   | Access ASSIGN Expr                  { Assign($1, $3)      } // $1为左值
   | NAME LPAR Exprs RPAR                { Call($1, $3)        }  
   | NOT Expr                            { Prim1("!", $2)      }
+  // 并不是 这里有好多调用 这有not 
   | Expr QUESTION Expr COLON Expr       { Prim3($1,$3,$5)     }
   // 表达式 ?表达式:表达式
   // 判断
@@ -189,6 +190,9 @@ ExprNotAccess:
   | PRINT Expr                          { Prim1("printi", $2) }
   // printi 只有这里可以调用吗 外面不行。。
   // print int 然后第二个参数
+  // print 会返回这个值本身 int char 返回没什么问题 但是str 返回什么
+  // 参考c语言的print 的话 应该是返回1 成功 0 失败吧，其实不返回也没什么
+  // printf 的返回 小问题罢了 这里我觉得别管了
   | PRINTLN                             { Prim1("printc", nl) }
   | PRINTF LPAR CSTSTRING PrintfArgs RPAR  { 
     printf "调用printf\n";

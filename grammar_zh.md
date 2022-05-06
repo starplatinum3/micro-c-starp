@@ -77,7 +77,7 @@ C和C++的语法，其中类型规范围绕
       exprs ::=
               <empty>
               expr1
-
+    
       expr1 ::=
               expr
               expr , expr1
@@ -384,7 +384,7 @@ Lexical matters: tokens and comments
 NAME:       [`a`-`z``A`-`Z`][`a`-`z``A`-`Z``0`-`9`]*
 
             except for the keywords, which are:
-
+    
             char else false if int null print println return true void while
 
 CSTINT:     [0-9]+
@@ -400,5 +400,5 @@ OP:         + - * / % = == != < > <= >= && ||
 There are two kinds of comments (not inside strings, not nested):
 
         // comment extends to end of line
-
+    
         /* ... */ delimited comment

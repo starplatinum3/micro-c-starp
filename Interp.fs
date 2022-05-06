@@ -135,6 +135,8 @@ let emptyStore = Map.empty<address, int>
 let setSto (store: store) addr value = store.Add(addr, value)
 
 //输入addr 返回存储的值value
+// 不是很看得懂 这返回的是什么。。
+// 不过好在有注释，虽然这语言看不懂 至少我知道他在干嘛
 let getSto (store: store) addr = store.Item addr
 
 // store上从loc开始分配n个值的空间
@@ -152,6 +154,8 @@ let rec initSto loc n store =
 
 locEnv结构是元组 : (绑定环境env,下一个空闲地址nextloc)
 store结构是Map<string,int>
+为什么是str ,addr 不是int吗.. 不懂
+也就是str 地址，保存了一个int ，那str就没有可能实现了吧。。。
 
 扩展环境 (x nextloc) :: env ====> 新环境 (env1,nextloc+1)
 变更store (nextloc) = v
@@ -460,6 +464,11 @@ and eval e locEnv gloEnv store : int * store =
     // | CstChar c   -> (char c, store)
     // | CstChar c   -> ( c, store)
     | CstChar c   -> ( int c, store)
+    // | CstString c    -> (  c, store)
+    | CstString c    -> (  1, store)
+    // 那这里也随便返回一个1 可以吗
+    // store参数有用还是 第一个参数呢
+    // str 咋办 这样返回可以吗。。 正常吗 先试试
     // 返回 int 和store  : int * store
     // 此表达式应具有类型    “int”    而此处具有类型    “char” 
         //  D:\proj\compile\plzoofs\microc\Interp.fs(439,23): error FS0039: 未定义值或构造函数“CHAR”。 你可能需要以下之一:   char   CPar [D:\proj\compile\plzoofs\microc\interpc.fsproj]
@@ -475,6 +484,7 @@ and eval e locEnv gloEnv store : int * store =
     //         | "%s"   -> (printf "%s " i1 ;i1 )
         // (res, store1)  
     | Prim1 (ope, e1) ->
+    //  好像没人调用。。？
         let (i1, store1) = eval e1 locEnv gloEnv store
         // 单原操作
         //  | NOT Expr                            { Prim1("!", $2)      }
@@ -494,8 +504,36 @@ and eval e locEnv gloEnv store : int * store =
                 //  就是打印数字形式的 而且还返回？
             | "printc" ->
             // 这是强转？
-                (printf "%c" (char i1)
-                 i1)
+                // (printf "%c" (char i1)
+                //  i1)
+                //  忽然想到，这不会只是个括号吧 就是个单纯的优先级的括号。。
+                // 只是个括号 然后来恶心人的 不会吧。。
+                // 也就是说这个括号去掉了也没事？
+                // 也就是说他其实是。。 像下面这样子的，返回值是这个i1
+                // char返回int 的话 也没什么问题 
+                // 但是string要返回什么int  这里的int返回了 又给谁去调用
+                // 返回的值会有影响吗
+                printf "%c" (char i1)
+                i1
+                // 这样写我就理解了啊， 写成上面这样我以为返回个tuple还是什么。。
+                // 而且f# 这个语言 网上资料都查不到 我也不知道他有没有元组
+                // 也就是说 回车和缩进对这门语言是有影响的吗？。。 缩进确实，回车也不知道
+                // printf "%c" (char i1) i1
+                // D:\proj\compile\plzoofs\microc\Interp.fs(508,24): error FS0001: 类型“'a -> int”与类型“unit”不匹配 [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+                // 经过测试，printf "%c" (char i1) i1 这样写是不行的，这样确实是返回了个unit了，应该就是类似元祖的东西吧
+                // 也就是他写在最后一行的就是返回值，所以他的回车对他的语言是有影响的
+                // 也就是说，上面这个写法的结果一样吗。。
+                // 因为啊。。第二个i1 如果是参数列表里的某个参数的话，也不是不可能啊，所以就会猜啊
+                // 因为c 的printf 不是有很多参数吗，那么一般都会认为他是个参数吧
+                // 这语言也没个return 根本看不懂啊,花了好多时间才理解这是个return的值啊
+                // 而且拿个括号括起来更加让人以为他们是同一个函数里的东西了啊
+                // 虽然说当作同一个函数的参数应该这样括才对啊..
+                // printf ("%c" (char i1)
+                // i1)
+                // 说到底还是因为我太菜的缘故啊
+                // 啊 是因为我太菜，没有看完语言的语法就来实战 是我的错。。
+                // 不能大放厥词，都是因为我没有学好基础的缘故。。
+
                 //  请问这是什么意思
                 //  括号是干嘛。。
                 //  printf 的结果是啥啊 为什么后面还有个i1 啊。。
@@ -509,9 +547,14 @@ and eval e locEnv gloEnv store : int * store =
         // printf "res 是什么 %s" res
         printf "\n res 是什么 %d\n" res
         (res, store1)
+        // 这个是返回元祖了
     | Prim2 (ope, e1, e2) ->
     // 双原子操作
         let (i1, store1) = eval e1 locEnv gloEnv store
+        // 去调用 可能会调用到 CstI 这个函数，获得int 的参数吧
+        // 会去对比参数的 ,突然发现为什么要用f# 呢,因为他可以没有类型
+        // 这样他就可以match参数的类型 如果java 要怎么写这个呢,强转? 可能比较麻烦吧
+        // 虽然说因为我菜,这f# 这么难理解,我比较讨厌他 但是现在发现他确实在写解释器方面有比较好的特性吧
         let (i2, store2) = eval e2 locEnv gloEnv store1
         // res 返回了什么、、
         // 加减乘除的结果
@@ -529,32 +572,28 @@ and eval e locEnv gloEnv store : int * store =
             | ">=" -> if i1 >= i2 then 1 else 0
             | ">" -> if i1 > i2 then 1 else 0
             | _ -> failwith ("unknown primitive " + ope)
-    
+       
         (res, store2)
     // | PrintString (ope, e1) ->
-    // | PrintString ( e1) ->
-    // // 双原子操作
-    //     let (i1, store1) = eval e1 locEnv gloEnv store
-    //     // 操作之后才能获得实际的 str 吗
-    //     // let (i2, store2) = eval e2 locEnv gloEnv store1
-    //     // 看不懂f# 。。
+    | PrintString ( strEnv) ->
+    // 双原子操作
+        // let (i1, store1) = eval strEnv locEnv gloEnv store
+        // 他调用了什么 拿到的是int 啊
+        // 对啊挺烦的 调用之后 第一个参数必然是int啊 
+        // 是不是直接别调用了 传过来的就是str ？
+        // 但是他又是store了个什么
+        // 对于str 他第一个参数只能返回int啊 ，但是int 又是他需要打印的东西
+        // 怎么从int 变成str呢，这不是很奇怪吗
+        // 操作之后才能获得实际的 str 吗
+        // let (i2, store2) = eval e2 locEnv gloEnv store1
+        // 看不懂f# 。。
 
-    //     let res =
-    //         match ope with
-    //         | "*" -> i1 * i2
-    //         | "+" -> i1 + i2
-    //         | "-" -> i1 - i2
-    //         | "/" -> i1 / i2
-    //         | "%" -> i1 % i2
-    //         | "==" -> if i1 = i2 then 1 else 0
-    //         | "!=" -> if i1 <> i2 then 1 else 0
-    //         | "<" -> if i1 < i2 then 1 else 0
-    //         | "<=" -> if i1 <= i2 then 1 else 0
-    //         | ">=" -> if i1 >= i2 then 1 else 0
-    //         | ">" -> if i1 > i2 then 1 else 0
-    //         | _ -> failwith ("unknown primitive " + ope)
-    
-    //     (res, store2)
+        // printf "%s"  i1
+        printf "%s"  strEnv
+        // 要返回int
+   
+        (1, store1)
+        // 干脆随便返回个1 代表成功好了
     | Prim3(e, stmt1, stmt2) ->
     // 他不应该返回 表达式 而是返回stmt 
     // https://www.codenong.com/34315299/

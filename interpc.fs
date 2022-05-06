@@ -27,6 +27,7 @@ let _ =
             ignore (
                 let ex = fromFile source
                 run ex inputargs
+                // 大概程序入口是这里了
             ) //run 方法对语法树求值
         with Failure msg -> printf "ERROR: %s\n" msg
     else
