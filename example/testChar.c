@@ -14,11 +14,11 @@ ch='c';
 printCh ch;
 printCh (ch);
 char ret;
-ret='\n';
+// ret='\n';
 // ERROR: Lexer error: illegal symbol in file example\testChar.c near line 17, column 5
 // 打印不了回车。。
 // printCh ('\n');
 // 这个打印不了
-printCh (ret);
+// printCh (ret);
 // 可以带着括号
 }

@@ -24,6 +24,8 @@ let keyword s =
     | "int"     -> INT
     | "null"    -> NULL
     | "print"   -> PRINT
+    | "printf"   -> PRINTF
+    | "printString"   -> PRINT_STRING
     | "println" -> PRINTLN
     | "printCh"   -> PRINT_CHAR
     | "return"  -> RETURN

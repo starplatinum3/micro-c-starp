@@ -46,6 +46,7 @@ type token =
   | PRINTF
   | STRING
   | PRINT_CHAR
+  | PRINT_STRING
   | CSTCHAR of (char)
   | CSTSTRING of (string)
   | NAME of (string)
@@ -97,6 +98,7 @@ type tokenId =
     | TOKEN_PRINTF
     | TOKEN_STRING
     | TOKEN_PRINT_CHAR
+    | TOKEN_PRINT_STRING
     | TOKEN_CSTCHAR
     | TOKEN_CSTSTRING
     | TOKEN_NAME

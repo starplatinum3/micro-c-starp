@@ -35,6 +35,10 @@ and expr =                           // 表达式，右值
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
   | Printf of string * expr list
+  // | PrintString of string * expr 
+  | PrintString of expr 
+  // | PrintString of string 
+  // | Printf of string * expr 
   // 这里做里面的操作
                                                                    
 and access =                         //左值，存储的位置                                            

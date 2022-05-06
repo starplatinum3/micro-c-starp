@@ -275,6 +275,7 @@ and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : inst
     | Assign(acc, e) -> cAccess acc varEnv funEnv (cExpr e varEnv funEnv (STI :: C))
     | CstI i         -> addCST i C
     | Addr acc       -> cAccess acc varEnv funEnv C
+    
     | Prim1(ope, e1) ->
       cExpr e1 varEnv funEnv
           (match ope with
@@ -311,7 +312,14 @@ and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : inst
     //   let (i3, store3) = eval e3 locEnv gloEnv store2
     //   if i1 = 0 then (i2,store3) else (i3,store3) 
                 // if 表达式需要具有类型“instr list”才能满足上下文类型要求。当前的类型为“'a * 'b”。F# Compiler1
- 
+    // | Printf(ope, e1)  ->
+    //      cExpr e1.[0] varEnv funEnv  
+    //         (match ope with
+    //         | "%d"  -> PRINTI :: C
+    //         | "%c"  -> PRINTC :: C
+    //         | "%f"  -> PRINT_FLOAT :: C
+    //         // printflot 这种级别的函数 需要在后端定义了
+    //         )
     | Andalso(e1, e2) ->
       match C with
       | IFZERO lab :: _ ->

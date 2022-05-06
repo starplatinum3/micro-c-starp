@@ -422,3 +422,36 @@ c
   ./bin/Debug/net6.0/interpc.exe example\testPrintf.c 1
 
 example\testPrintf.c
+
+
+
+  ./bin/Debug/net6.0/interpc.exe example\testString.c 1
+
+printf "%s",s;
+
+ERROR: parse error in file example\testString.c near line 13, column 11
+
+定义 string 没问题 但是printf 有问题啊
+
+
+
+./bin/Debug/net6.0/interpc.exe example\charArrTest.c  1
+
+PS D:\proj\compile\plzoofs\microc> ./bin/Debug/net6.0/interpc.exe example\charArrTest.c  
+Micro-C interpreter v 1.1.0 of 2021-5-19
+interpreting example\charArrTest.c ...inputargs:[]
+1
+
+
+
+可以print Char Arr 里的一个char
+
+有了char arr 意味着有了str
+
+```
+char charArr[2];
+
+  charArr = "23";
+```
+
+但是这样不行，因为没有做过这种定义。。

@@ -432,9 +432,28 @@ and eval e locEnv gloEnv store : int * store =
         let (loc, store1) = access acc locEnv gloEnv store
         (getSto store1 loc, store1)
     | Assign (acc, e) ->
-        let (loc, store1) = access acc locEnv gloEnv store
-        let (res, store2) = eval e locEnv gloEnv store1
-        (res, setSto store2 loc res)
+        let (loc, storeStart) = access acc locEnv gloEnv store
+        // let (res, store2) = eval e locEnv gloEnv store1
+        // (res, setSto store2 loc res)
+        let (res, store3) = 
+            match e with
+            | CstString s ->
+            // | CstS s ->
+                let mutable i = 0;
+                let arrloc = getSto storeStart loc  // 数组起始地址
+                // printf "i am arrayloc %d\n" arrloc
+                let mutable store2 = storeStart;
+                while i < s.Length do
+                    store2 <- setSto store2 (arrloc+i) (int (s.Chars(i)))
+                    // printf "loc %d; " (arrloc+i)
+                    // printf "assign %c\n"(s.Chars(i))
+                    i <- i+1
+                // printf "i am new arrayloc %d\n" (getSto store2 loc)
+                // printf "i am new loc%d" loc
+                (s.Length, store2)
+            // | _ ->  eval e locEnv gloEnv structEnv storeStart
+            | _ ->  eval e locEnv gloEnv  storeStart
+        (loc, setSto store3 loc res) 
     | CstI i -> (i, store)
     // | ConstChar c    -> (CHAR c, store)
     // | CstChar c   -> (CHAR c, store)
@@ -445,6 +464,16 @@ and eval e locEnv gloEnv store : int * store =
     // 此表达式应具有类型    “int”    而此处具有类型    “char” 
         //  D:\proj\compile\plzoofs\microc\Interp.fs(439,23): error FS0039: 未定义值或构造函数“CHAR”。 你可能需要以下之一:   char   CPar [D:\proj\compile\plzoofs\microc\interpc.fsproj]
     | Addr acc -> access acc locEnv gloEnv store
+    // | Printf(op,e1)   ->
+    //     let (i1, store1) = eval e1 locEnv gloEnv store
+    //     let res = 
+    //         match op with
+    //         // 他没有可能打印str的呀 传进来就是int 。。
+    //         | "%c"   -> (printf "%c " char i1; i1)
+    //         | "%d"   -> (printf "%d " i1 ; i1)  
+    //         | "%f"   -> (printf "%f " i1 ;i1 )
+    //         | "%s"   -> (printf "%s " i1 ;i1 )
+        // (res, store1)  
     | Prim1 (ope, e1) ->
         let (i1, store1) = eval e1 locEnv gloEnv store
         // 单原操作
@@ -455,23 +484,37 @@ and eval e locEnv gloEnv store : int * store =
         let res =
             match ope with
             | "!" -> if i1 = 0 then 1 else 0
+            // 哦 确实 根据这个返回我应该知道他是个int了 
             // 这是赋值还是比较啊 是0 就是不等于
             | "printi" ->
                 (printf "%d " i1
                  i1)
+                //  但是这里是什么形式，这为啥是int 返回的是一个tuple吗，f# 有tuple吗
+                // 第一个i1 应该是printf 的参数，但是第二个i1 是啥。。
                 //  就是打印数字形式的 而且还返回？
             | "printc" ->
             // 这是强转？
                 (printf "%c" (char i1)
                  i1)
+                //  请问这是什么意思
+                //  括号是干嘛。。
+                //  printf 的结果是啥啊 为什么后面还有个i1 啊。。
+                // f#  printf
+                // 我怎么才能打印这个res 啊 ，这个res 是个什么类型我都不知道啊。。
+                
             | _ -> failwith ("unknown primitive " + ope)
-
+        // pri 
+        //   D:\proj\compile\plzoofs\microc\Interp.fs(503,33): error FS0001: 此表达式应具有类型    “string”    而此处具有类型    “int”
+        // 通过报错知道了他是个int 
+        // printf "res 是什么 %s" res
+        printf "\n res 是什么 %d\n" res
         (res, store1)
     | Prim2 (ope, e1, e2) ->
     // 双原子操作
         let (i1, store1) = eval e1 locEnv gloEnv store
         let (i2, store2) = eval e2 locEnv gloEnv store1
-
+        // res 返回了什么、、
+        // 加减乘除的结果
         let res =
             match ope with
             | "*" -> i1 * i2
@@ -488,6 +531,30 @@ and eval e locEnv gloEnv store : int * store =
             | _ -> failwith ("unknown primitive " + ope)
     
         (res, store2)
+    // | PrintString (ope, e1) ->
+    // | PrintString ( e1) ->
+    // // 双原子操作
+    //     let (i1, store1) = eval e1 locEnv gloEnv store
+    //     // 操作之后才能获得实际的 str 吗
+    //     // let (i2, store2) = eval e2 locEnv gloEnv store1
+    //     // 看不懂f# 。。
+
+    //     let res =
+    //         match ope with
+    //         | "*" -> i1 * i2
+    //         | "+" -> i1 + i2
+    //         | "-" -> i1 - i2
+    //         | "/" -> i1 / i2
+    //         | "%" -> i1 % i2
+    //         | "==" -> if i1 = i2 then 1 else 0
+    //         | "!=" -> if i1 <> i2 then 1 else 0
+    //         | "<" -> if i1 < i2 then 1 else 0
+    //         | "<=" -> if i1 <= i2 then 1 else 0
+    //         | ">=" -> if i1 >= i2 then 1 else 0
+    //         | ">" -> if i1 > i2 then 1 else 0
+    //         | _ -> failwith ("unknown primitive " + ope)
+    
+    //     (res, store2)
     | Prim3(e, stmt1, stmt2) ->
     // 他不应该返回 表达式 而是返回stmt 
     // https://www.codenong.com/34315299/
@@ -515,29 +582,115 @@ and eval e locEnv gloEnv store : int * store =
             let (v3, store3) = eval stmt2 locEnv gloEnv store
             // store3
             (v3, store3)
-    | Printf (s, exprs) ->
-        let rec evalExprs exprs store1 =  // 循环计算printf后面所有表达式的值
-            match exprs with
-            | e :: tail ->  
-                let (v, store2) = eval e locEnv gloEnv store1 
-                let (vlist, store3) = evalExprs tail store2
-                ([v] @ vlist, store3)
-            | [] -> ([], store1)
-        let (evals, store1) = evalExprs exprs store
+    // | Printf (s, exprs) ->
+    //     let rec evalExprs exprs store1 =  // 循环计算printf后面所有表达式的值
+    //         match exprs with
+    //         | e :: tail ->  
+    //             let (v, store2) = eval e locEnv gloEnv store1 
+    //             let (vlist, store3) = evalExprs tail store2
+    //             ([v] @ vlist, store3)
+    //         | [] -> ([], store1)
+    //     let (evals, store1) = evalExprs exprs store
 
 
-        let getPrintString =
-            let mutable i = 0
-            let slist = s.Split('%')
-            let mutable resString = slist.[0]
-            let mutable i = 1
-            while i < slist.Length do
-                resString <- resString + evals.[i-1].ToString() + slist.[i].[1..]
-                i <- i + 1
-            printf "%s" resString
-            1  // 返回1
-        (getPrintString, store1)
+    //     let getPrintString =
+    //         let mutable i = 0
+    //         let slist = s.Split('%')
+    //         let mutable resString = slist.[0]
+    //         let mutable i = 1
+    //         while i < slist.Length do
+    //             resString <- resString + evals.[i-1].ToString() + slist.[i].[1..]
+    //             i <- i + 1
+    //         printf "%s" resString
+    //         1  // 返回1
+    //     (getPrintString, store1)
+    // | Printf (s, exprs) ->
+    //     // let rec evalExprs exprs store1 =  // 循环计算printf后面所有表达式的值
+    //     //     match exprs with
+    //     //     | e :: tail ->  
+    //     //         let (v, store2) = eval e locEnv gloEnv store1 
+    //     //         let (vlist, store3) = evalExprs tail store2
+    //     //         ([v] @ vlist, store3)
+    //     //     | [] -> ([], store1)
+    //     // let (evals, store1) = evalExprs exprs store
+    //     let evalOneExpr exprs store1 =  // 返回计算得到的值, 剩下的exprs, 新的store
+    //         match exprs with
+    //         | e :: tail ->  
+    //             let (v, store2) = eval e locEnv gloEnv  store1 
+    //             // let (vlist, store3) = evalExprs tail store2
+    //             (v, tail, store2)
+    //         | [] -> failwith "few expression"
+        
+    //     let getOneExpr exprs store1 =  // 返回计算得到的值, 剩下的exprs, 新的store
+    //         match exprs with
+    //         | e :: tail ->  
+    //             // let (loc, store2) = access (Access e) locEnv gloEnv store1
+    //             (e, tail, store1)
+    //         | [] -> failwith "few expression"
 
+
+    //     let mutable store1 = store
+    //     let getPrintString =
+    //         let slist = s.Split('%')
+    //         let mutable resString = slist.[0]
+    //         let mutable i = 1
+    //         let mutable es = exprs
+    //         // let mutable store1 = store
+    //         while i < slist.Length do
+    //             let printv =
+    //                 match slist.[i].[0] with
+    //                 | 'd' -> 
+    //                     let (e, exprs2, store2) = evalOneExpr exprs store1
+    //                     // let intv = 1
+    //                     // if e.GetType().IsEquivalentTo((1).GetType()) then  // 检查类型是否是int..但是现在存的都是int ?
+    //                         // evals.[i-1].ToString()
+    //                     es <- exprs2
+    //                     store1 <- store2
+    //                     e.ToString()
+    //                 | 'c' -> 
+    //                     let (e, exprs2, store2) = evalOneExpr exprs store1
+    //                     // char(evals.[i-1]).ToString()
+    //                     es <- exprs2
+    //                     store1 <- store2
+    //                     char(e).ToString()
+    //                 | 'f' -> 
+    //                     let (e, exprs2, store2) = evalOneExpr exprs store1
+    //                     es <- exprs2
+    //                     store1 <- store2
+    //                     let bytes = System.BitConverter.GetBytes(e)
+    //                     let v = System.BitConverter.ToSingle(bytes, 0)
+    //                     v.ToString()
+    //                 | 's' ->
+    //                     // let (slen, exprs2, store2) = oneExpr exprs store1
+    //                     // printf "%d" slen
+    //                     let (e, exprs2, store2) = getOneExpr exprs store1
+    //                     let (loc, store3) = 
+    //                         match e with
+    //                         | Access acc -> access acc locEnv gloEnv structEnv store
+    //                         | _ -> failwith "Don't support expression"
+    //                     // printf "i m loc2 %d\n" loc
+    //                     let arrloc = getSto store2 loc  // 数组起始地址
+    //                     // printf "i am arrayloc2 %d\n" arrloc
+    //                     // let (loc, store1) = access AccVar e locEnv gloEnv store
+    //                     // let arrloc = getSto store1 loc
+    //                     es <- exprs2
+    //                     store1 <- store2
+    //                     // let mutable store2 = store1;
+    //                     let mutable i = 0;
+    //                     let mutable s = ""
+    //                     while i < arrloc do
+    //                         // s <- s + char(getSto store2 (arrloc-i)).ToString()
+    //                         s <- char(getSto store2 (arrloc-i-1)).ToString() + s
+    //                         i <- i+1
+    //                     // printf "i m s %s\n" s
+    //                     s
+    //                 | _ -> failwith "format mismatch"
+
+    //             resString <- resString + printv + slist.[i].[1..]
+    //             i <- i + 1
+    //         printf "%s" resString
+    //         1  // 返回1
+    //     (getPrintString, store1)
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store
 

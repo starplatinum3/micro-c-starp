@@ -46,6 +46,7 @@ type instr =
   | PRINTC                             (* print s[sp] as character        *)
   | LDARGS of int                             (* load command line args on stack *)
   | STOP                               (* halt the abstract machine       *)
+  | PRINT_FLOAT
 
 (* Generate new distinct labels *)
 
@@ -176,6 +177,10 @@ let CODESTOP   = 25;
 [<Literal>]
 let CODE_CST_CHAR    = 27;
 
+[<Literal>]
+let CODE_PRINT_FLOAT    = 28;
+
+
 
 (* Bytecode emission, first pass: build environment that maps 
    each label to an integer address in the bytecode.
@@ -213,8 +218,10 @@ let makelabenv (addr, labenv) instr =
     | RET m          -> (addr+2, labenv)
     | PRINTI         -> (addr+1, labenv)
     | PRINTC         -> (addr+1, labenv)
+    | PRINT_FLOAT         -> (addr+1, labenv)
     | LDARGS  m       -> (addr+1, labenv)
     | STOP           -> (addr+1, labenv)
+    
 
 (* Bytecode emission, second pass: output bytecode as integers *)
 
@@ -254,6 +261,7 @@ let rec emitints getlab instr ints =
     | RET m          -> CODERET    :: m :: ints
     | PRINTI         -> CODEPRINTI :: ints
     | PRINTC         -> CODEPRINTC :: ints
+    | PRINT_FLOAT -> CODE_PRINT_FLOAT :: ints
     | LDARGS m        -> CODELDARGS :: ints
     | STOP           -> CODESTOP   :: ints
 
@@ -311,6 +319,7 @@ let rec decomp ints : instr list =
     | CODERET    :: m :: ints_rest                    ->   RET m         :: decomp ints_rest
     | CODEPRINTI :: ints_rest                         ->   PRINTI        :: decomp ints_rest
     | CODEPRINTC :: ints_rest                         ->   PRINTC        :: decomp ints_rest
+    | CODE_PRINT_FLOAT :: ints_rest                         ->   PRINT_FLOAT :: decomp ints_rest
     | CODELDARGS :: ints_rest                         ->   LDARGS 0       :: decomp ints_rest
     | CODESTOP   :: ints_rest                         ->   STOP             :: decomp ints_rest
     | CODECSTI   :: i :: ints_rest                    ->   CSTI i :: decomp ints_rest       
