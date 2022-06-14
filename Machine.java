@@ -120,8 +120,15 @@ class Machine {
       } break; 
       case RET: { 
         int res = s[sp]; 
-        sp = sp-p[pc]; bp = s[--sp]; pc = s[--sp]; 
+        // 栈顶 
+        sp = sp-p[pc]; 
+        // 栈顶变成了 原来的栈顶- 现在的指令 
+        bp = s[--sp];
+        // 栈底回退一格
+         pc = s[--sp]; 
+        //  指令回退
         s[sp] = res; 
+        // 栈顶放上返回值
       } break; 
       case PRINTI:
         System.out.print(s[sp] + " "); break; 

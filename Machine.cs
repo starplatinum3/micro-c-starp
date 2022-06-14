@@ -19,6 +19,7 @@ class Machine
 {
     static void Main(string[] args)
     {
+         System.Console.Write("Main ");
         // foreach (var arg in args) {
         // Console.WriteLine(arg);
         // }
@@ -54,6 +55,7 @@ class Machine
 
     static void execute(string[] arglist, bool trace)
     {
+          System.Console.Write("execute");
         int[] p = readfile(arglist[0]);                // Read the program from file
         int[] s = new int[STACKSIZE];               // The evaluation stack
         int[] iargs = new int[arglist.Length - 1];
@@ -218,12 +220,15 @@ class Machine
 
     public static int[] readfile(string filename)
     {
+         System.Console.WriteLine("readfile");
         List<Int32> rawprogram = new List<Int32>();
         StreamReader sr = new StreamReader(filename);
 
         string[] ins = Regex.Split(sr.ReadToEnd(), @"\s+");
         foreach (string item in ins)
         {
+            //    System.Console.WriteLine("item");
+            //       System.Console.WriteLine(item);
             rawprogram.Add(Int32.Parse(item));
         }
 

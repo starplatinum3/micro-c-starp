@@ -17,10 +17,12 @@
  
 <Compile Include="Absyn.fs" />
 <Compile Include="Debug.fs" />
+<Compile Include="top\starp\util\PrintUtil.fs" />
 <Compile Include="CPar.fs" />
 <Compile Include="CLex.fs" />
 <Compile Include="Parse.fs" />
 <Compile Include="Machine.fs" />
+<Content Include="readme_interpc.md" />
 <Compile Include="Interp.fs" />
 <Compile Include="interpc.fs" />
 </ItemGroup>
@@ -34,7 +36,7 @@
  <!-- <MyItem Include="example\function1.c" Args ="8"/>  -->
 <!-- <MyItem Include="example\ex1.c" Args ="8"/> -->
 <!-- <MyItem Include="example\ex2.c" /> -->
-<MyItem Include="example\ex3.c" Args ="8"/>
+<MyItem Include="example\ex3.c" Args="8" />
 <!-- <MyItem Include="example\ex4.c" Args ="8"/>  -->
 <!-- <MyItem Include="example\ex5.c" Args ="8"/> 
 <MyItem Include="example\ex6.c" Args ="8"/>
@@ -75,10 +77,7 @@
 
 
 <Target Name="ccrun"> 
-<Exec Command="
-echo -----------interprete------------
-dotnet run -p interpc.fsproj -g %(MyItem.RelativeDir)%(MyItem.FileName).c %(MyItem.Args)"
-/>
+<Exec Command="&#xD;&#xA;echo -----------interprete------------&#xD;&#xA;dotnet run -p interpc.fsproj -g %(MyItem.RelativeDir)%(MyItem.FileName).c %(MyItem.Args)" />
 
 </Target>
 </Project>

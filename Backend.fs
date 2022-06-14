@@ -267,3 +267,11 @@ let rec emitx86 instr =
                     add rsp, 8          ; restore rsp\n\t\
                     pop rbp\n\t\
                     ret\n\t"
+                    // 这里没有定义
+    | _ -> 
+    // 这是不能打印的吗
+    // D:\school\compile\plzoofs\microc\Backend.fs(272,26): error FS0010: 意外的 符号“_” 在表达式中 
+        // failwith $"没有定义 {_}"
+        failwith $"没有定义 {instr} "
+        // printfn $"没有定义 {_}"
+        // ""

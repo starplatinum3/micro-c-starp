@@ -50,12 +50,31 @@
 #define PRINTI 22
 #define PRINTC 23
 #define LDARGS 24
+// 一定要对应上吗 我觉得是的 
+// [<Literal>]
+// let CODELDARGS = 24
 #define STOP 25
+// #define THROW 32
+// #define PUSHHR 33
+// #define POPHR 34
+
+#define THROW 36
+#define PUSHHR 37
+#define POPHR 38
+
+// [<Literal>]
+// let CODETHROW   = 36;
+
+// [<Literal>]
+// let CODEPUSHHR  = 37;
+
+// [<Literal>]
+// let CODEPOPHR   = 38;
 
 #define STACKSIZE 1000
 
 // Print the stack machine instruction at p[pc]
-
+// example\ex1.out
 void printInstruction(int p[], int pc)
 {
   switch (p[pc])
@@ -138,6 +157,15 @@ void printInstruction(int p[], int pc)
   case STOP:
     printf("STOP");
     break;
+  case THROW:
+        printf("THROW %d", p[pc + 1]);
+        break;
+  case PUSHHR: 
+        printf("PUSHHR %d %d", p[pc + 1], p[pc + 2]);
+        break;
+  case POPHR: 
+        printf("POPHR");
+        break;
   default:
     printf("<unknown>");
     break;
@@ -191,6 +219,8 @@ int execcode(int p[], int s[], int iargs[], int iargc, int /* boolean */ trace)
   int bp = -999; // Base pointer, for local variable access
   int sp = -1;   // Stack top pointer
   int pc = 0;    // Program counter: next instruction
+   int hr = -1;
+  // ： 保存当前异常在栈中的地址，用于追踪需要处理的异常
   for (;;)
   {
     if (trace)
@@ -214,8 +244,41 @@ int execcode(int p[], int s[], int iargs[], int iargc, int /* boolean */ trace)
       sp--;
       break;
     case DIV:
-      s[sp - 1] = s[sp - 1] / s[sp];
-      sp--;
+      // s[sp - 1] = s[sp - 1] / s[sp];
+      // sp--;
+
+        if(s[sp]==0)
+      {
+        // printf("hr: %d ", hr);
+        // printf("exception: %d %s\n", 1, "Div error");
+        //  printf("exception 除数为0: %d %s\n", 1, "Div error");
+         printf("exception 除数为0, 栈指针位置 : %d, 错误类型: %s\n", sp, "Div error");
+          while (hr != -1 && s[hr] != 1 )
+          {
+            // 栈里不是 1
+              hr = s[hr+2];
+            // printf("hr: %d ", hr);
+            int code= p[pc];
+              printf("exception: 错误代码是: %d,程序计数器: %d \n", code,pc);
+          }
+              
+          if (hr != -1) { 
+            // 没有到头
+              sp = hr-1;    
+              pc = s[hr+1];
+              hr = s[hr+2];
+          } else {
+            // hr 必然是-1 
+            // 保存当前异常在栈中的地址，用于追踪需要处理的异常
+              printf("not found exception 异常在栈中的地址 %d \n", hr);
+              return sp;
+          }
+      }
+      else{
+          s[sp - 1] = s[sp-1] / s[sp];
+          sp--; 
+      }
+             
       break;
     case MOD:
       s[sp - 1] = s[sp - 1] % s[sp];
@@ -248,6 +311,7 @@ int execcode(int p[], int s[], int iargs[], int iargc, int /* boolean */ trace)
       break;
     case STI: // store indirect, keep value on top
       s[s[sp - 1]] = s[sp];
+      // 栈顶第二个作为下标  放了栈顶的值
       s[sp - 1] = s[sp];
       sp--;
       break;
@@ -271,12 +335,53 @@ int execcode(int p[], int s[], int iargs[], int iargc, int /* boolean */ trace)
     case IFNZRO:
       pc = (s[sp--] != 0 ? p[pc] : pc + 1);
       break;
+    case PUSHHR:
+    // PUSHHDLR,保存catch中的异常种类，需要跳转的位置以及hr入栈
+      s[++sp] = p[pc++];    //exn
+      int tmp = sp;       //exn address
+      sp++;
+      s[sp++] = p[pc++];   //jump address
+      // 栈顶放了 程序
+      s[sp] = hr;
+      hr = tmp;
+      break;
+    case THROW: 
+      while (hr != -1 && s[hr] != p[pc] )
+      {
+        // hr +2 是干嘛
+          hr = s[hr+2]; //find exn address
+          printf("hr: %d exception: %d\n", hr, p[pc]);
+      }
+          
+      if (hr != -1) { // Found a handler for exn
+          sp = hr-1;    // remove stack after hr
+          pc = s[hr+1];
+          hr = s[hr+2]; // with current handler being hr
+      } else {
+          printf("%d not find exception\n");
+          return sp;
+      }
+      break;
+    case POPHR:
+        hr = s[sp--];
+        sp-=2;
+        break;
     case CALL:
     {
       int argc = p[pc++];
+      // 参数的 个数
       int i;
+      // 看了一下这个 知道了 是给 返回值和 旧的 bp留下位置
       for (i = 0; i < argc; i++)   // Make room for return address
         s[sp - i + 2] = s[sp - i]; // and old base pointer
+        // 往右边两个的 是原来的 
+        // 1 2 3 4 ] [ 0 0  1 2 3 4 ] 
+        // [3]  放入 两个
+        //  [4 -999 3]
+        // 3 是之前 load Args 载入的参数 
+        // 4 是return 地址  
+        // -999 是旧的 栈底 指针 
+        // 结合 试卷的题目 
       s[sp - argc + 1] = pc + 1;
       sp++;
       s[sp - argc + 1] = bp;

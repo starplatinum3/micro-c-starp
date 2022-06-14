@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.tcc": "c"
+    },
+    "editor.inlayHints.enabled": "offUnlessPressed"
+}

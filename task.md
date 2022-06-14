@@ -7,8 +7,8 @@
 
 - [x] do while/until/for 语法
 - [x] 三目运算  ? :
-- 变量初始化
-- 字符串支持
+- 变量初始化  有
+- 字符串支持 有
   - 模板字符串
   - 单引号，双引号嵌套
   
@@ -23,8 +23,9 @@
 - 安全数组，越界检查
 
 ### 特性
-- [位运算](https://cn.julialang.org/JuliaZH.jl/latest/manual/mathematical-operations/#位运算符)
-- 布尔类型，逻辑运算
+- [位运算](https://cn.julialang.org/JuliaZH.jl/latest/manual/mathematical-operations/#位运算符) 有
+- 布尔类型， 有
+- 逻辑运算 有
 - [复数，有理数](https://cn.julialang.org/JuliaZH.jl/latest/manual/complex-and-rational-numbers/)
 - [链式比较](https://cn.julialang.org/JuliaZH.jl/latest/manual/mathematical-operations/#链式比较)
 - [正则表达式](https://cn.julialang.org/JuliaZH.jl/latest/manual/strings/#正则表达式)

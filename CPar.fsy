@@ -15,6 +15,9 @@ open Absyn
 // Vardesc 返回的是一个 元组 (g,s)
 // g是类型构造函数，s是变量名
 // compose1 函数 取出 类型构造子 g，用类型复合机制构造类型。
+let first  (firstOne, _, _) = firstOne
+let second (_, sndOne, _) = sndOne
+let third  (_, _, thirdOne) = thirdOne
 
 let compose1 f (g, s) = ((fun x -> g(f(x))), s)
 let nl = CstI 10 //  \n 的 ASCII 码
@@ -26,24 +29,45 @@ let nl = CstI 10 //  \n 的 ASCII 码
 %token <string> CSTSTRING NAME
 // 这里是否可以把语言的char 和f# 的char 对应？
 %token <char> CSTCHAR
-
+%token <float32> CSTFLOAT
+%token PLUSASSIGN MINUSASSIGN TIMESASSIGN DIVASSIGN MODASSIGN
 // 定义 token
 %token CHAR ELSE IF INT NULL PRINT PRINTLN FOR RETURN VOID WHILE DOWHILE DO DOUNTIL UNTIL PRINTF  STRING PRINT_CHAR PRINT_STRING
-%token PLUS MINUS TIMES DIV MOD
-%token EQ NE GT LT GE LE
+%token PLUS MINUS TIMES DIV MOD    FLOAT STRUCT POINT BOOL 
+%token SWITCH CASE DEFAULT  BREAK  CONTINUE
+// %token CHAR ELSE IF INT NULL PRINT PRINTLN RETURN VOID WHILE BREAK CONTINUE
+%token EQ NE GT LT GE LE PRE_INC PRE_DEC
 %token NOT SEQOR SEQAND
 %token LPAR RPAR LBRACE RBRACE LBRACK RBRACK SEMI COMMA ASSIGN AMP  QUESTION   COLON
-%token EOF
+%token EOF   BITAND BITOR BITXOR BITLEFT BITRIGHT BITNOT
+%token TRY CATCH THROW
 
 %right ASSIGN             /* lowest precedence */  // 最下面的优先级最高
+// a= b=c 
+// 先赋值后面的 b=c 
+%right TO_CHAR TO_INT
+// (int) a (int) b
+// 先强转后面的 
 %nonassoc PRINT
+%right PLUSASSIGN MINUSASSIGN TIMESASSIGN DIVASSIGN MODASSIGN
+// a += b += c
+// 是要先处理 b+=c 的 
 %left SEQOR
 %left SEQAND
+%left BITXOR BITOR  BITAND
+// a or b or c 
+// 是 a or b 先运算
 %left EQ NE 
-%nonassoc GT LT GE LE
+%nonassoc GT LT GE LE PRE_INC PRE_DEC
+// ++ a ++ b ++c   
+%left BITLEFT BITRIGHT
+// a << b << c 
+// 是 a << b 先运算
 %left PLUS MINUS
 %left TIMES DIV MOD 
-%nonassoc NOT AMP 
+%nonassoc NOT AMP   BITNOT
+// c not a not b
+// https://blog.csdn.net/weixin_46222091/article/details/106007305
 %nonassoc LBRACK          /* highest precedence  */
 
 %start Main            // 语法开始符号
@@ -59,12 +83,24 @@ Main:
 Topdecs:
     /* empty */                         { [] }
   | Topdec Topdecs                      { $1 :: $2 }
+  // 后面还有跟多的 定义 连接起来 列表
 ;
 
 Topdec: 
-    Vardec SEMI                         { Vardec (fst $1, snd $1) }
+// 定义 分号
+    Vardec SEMI                         { 
+      printfn $"Vardec {Vardec}"
+      Vardec (fst $1, snd $1) }
   | Fundec                              { $1 }
+  // struct {
+  //   int a;
+  // };
+  | Structdec SEMI                      { Structdec(fst $1, snd $1) }
+  // | VardecAndAssign SEMI                { VardecAndAssign(fst $1, snd $1 , third $1) }
+  | VardecAndAssign SEMI                { VardecAndAssign(first $1, second $1 , third $1) }
 ;
+
+
 
 /*                                               
 变量声明  由于C 类型声明的复杂性，这里用了函数式编程的技巧来辅助类型构造
@@ -80,9 +116,18 @@ int *ipa[10];  // array of 10 pointers to int   (TypA (TypP TypI, Some 10), "ipa
 int (*iap)[10];  // pointer to array of 10 int    (TypP (TypA (TypI, Some 10))
 */
 
+// 变量定义的 fir
 Vardec:
     Type Vardesc                        { ((fst $2) $1, snd $2) }
 ;
+// Vardesc 返回的是一个 元组 (g,s)
+// g是类型构造函数，s是变量名
+// construct varName
+VardecAndAssign:
+  Type Vardesc ASSIGN Expr              { ((fst $2) $1, snd $2, $4) }
+  // Type Vardesc ASSIGN Expr              { ((first $2) $1, second $2, $4) }
+;
+// 多了最后一个赋值
 
 /*
  变量描述
@@ -105,6 +150,16 @@ Vardesc:
   | Vardesc LBRACK RBRACK               { compose1 (fun t -> TypA(t, None)) $1    }
     // ia[10]   带方括号，带下标
   | Vardesc LBRACK CSTINT RBRACK        { compose1 (fun t -> TypA(t, Some $3)) $1 }
+;
+
+Structdec:
+  STRUCT NAME LBRACE MemberDefList RBRACE         { ($2, $4) }
+;
+
+MemberDefList:
+    /* empty */ { [] }
+    // int a=1; ... int b=2;
+  | Vardec SEMI MemberDefList { $1 :: $3 }
 ;
 
 Fundec:
@@ -135,6 +190,22 @@ StmtOrDecSeq:
     /* empty */                         { [] }
   | Stmt StmtOrDecSeq                   { Stmt $1 :: $2 }
   | Vardec SEMI StmtOrDecSeq            { Dec (fst $1, snd $1) :: $3 }
+  // 缺了这句
+  | VardecAndAssign SEMI StmtOrDecSeq   { 
+    let typeName=first $1
+    let varName= second $1
+    // let assignMark= third $1
+    let typeAndVar= third $1
+    // printfn $"typeName {typeName}"
+    // printfn $"varName {varName}"
+    // printfn $"typeAndVar {typeAndVar}"
+    // printfn $"assignMark {assignMark}"
+    // StmtOrDecSeq $3
+    DecAndAssign (typeName, varName ,typeAndVar) :: $3 }
+    // DecAndAssign (first $1, second $1 , third $1) :: $3 }
+  // 定义和设置值 然后是分号
+  // 例子  int i=1 ;  int b=2;
+  // 获取了 定义的类型 定义的变量名 和 
 ;
 
 Stmt: 
@@ -148,6 +219,11 @@ StmtM:  /* No unbalanced if-else */
   | RETURN Expr SEMI                    { Return(Some($2))     }
   | Block                               { $1                   }
   | IF LPAR Expr RPAR StmtM ELSE StmtM  { If($3, $5, $7)       }
+  | SWITCH LPAR Expr RPAR LBRACE CaseStmt RBRACE  { Switch($3,$6)  }
+  // Expr ( Expr $3, CaseStmt $6) 会被注入 eval  
+  // Switch(expr) {
+  //    stmt
+  // }
   // | Expr QUESTION Expr COLON Expr       { Prim3($1,$3,$5)     }
   // | Expr QUESTION StmtM COLON StmtM       { Prim3($1,$3,$5)     }
   | DO StmtM WHILE LPAR Expr RPAR SEMI  { DoWhile($2, $5)        }
@@ -163,6 +239,13 @@ StmtM:  /* No unbalanced if-else */
   // while 左值 表达式 右边的值 语句 M是什么 某种指代吧 和 x类似？ 猜的。。
   | FOR LPAR Expr SEMI Expr SEMI Expr RPAR StmtM     { For($3,$5,$7,$9)  }
   // 最后是9 是body 
+  | BREAK SEMI                          { Break             }
+  // | CONTINUE SEMI                       { Continue }
+  // CONTINUE;
+  | CONTINUE SEMI                       { Continue }
+  | TRY StmtM CatchStmt                 { Try($2, $3) }
+  // Try($2 StmtM, $3 CatchStmt)
+  
 ;
 
 StmtU:
@@ -172,32 +255,85 @@ StmtU:
   | WHILE LPAR Expr RPAR StmtU          { While($3, $5)        }
 ;
 
+
+CatchStmt:
+    CATCH LPAR EXCEPTION RPAR StmtM                { [Catch($3,$5)]     }
+  | CATCH LPAR EXCEPTION RPAR StmtM CatchStmt      { Catch($3,$5) :: $6 }
+;
+
+
+EXCEPTION:
+  CSTSTRING                                        { Exception $1 }
+;
+
+
+CaseStmt:
+// [Case($2 AtExprNotAccess, $4 StmtM)]
+// 一个列表 有多个 case 
+    CASE AtExprNotAccess COLON StmtM      { [Case($2, $4)]   }  
+    // case a:
+    //   stmt 
+  | DEFAULT COLON StmtM                   { [Default($3)]    }
+  // [Default($3 StmtM)]  
+  // DEFAULT: stmt
+  | CASE AtExprNotAccess COLON StmtM CaseStmt      { [Case($2,$4)] @ $5  }
+  // [Case($2 AtExprNotAccess,$4 StmtM)] @ $5 CaseStmt
+  // 连接列表 @ 
+  // case expr:
+  //   StmtM
+  // case expr:
+  //   StmtM
+  // .. 更多的 递归
+;
+
 Expr: 
     Access                              { Access $1           } //取$1的右值
   | ExprNotAccess                       { $1                  } 
 ;
   //非左值的情况
+  // https://blog.csdn.net/coolwriter/article/details/80470852
 ExprNotAccess:
     AtExprNotAccess                     { $1                  }
   | Access ASSIGN Expr                  { Assign($1, $3)      } // $1为左值
   | NAME LPAR Exprs RPAR                { Call($1, $3)        }  
+  // name(a) 
+  // 这是调用 调用函数不能在 = 左边吧 比如 func(a)=b 不能把一个函数调用赋值
+  | PRE_INC Access                       { PreInc $2           } 
+  // ++ a 
+  // ++ a =3 也是不对的 
+  | PRE_DEC Access                       { PreDec $2           } 
   | NOT Expr                            { Prim1("!", $2)      }
+  // ！a = 1 这是不行的
   // 并不是 这里有好多调用 这有not 
-  | Expr QUESTION Expr COLON Expr       { Prim3($1,$3,$5)     }
+  | Expr QUESTION Expr COLON Expr       { 
+    printfn "xpr QUESTION Expr COLON "
+    printfn $"$1 {$1}"
+    Prim3($1,$3,$5)     }
+    // 已经放在挺前面了
   // 表达式 ?表达式:表达式
   // 判断
+  // (Expr $1) QUESTION Expr $3 COLON Expr  $5
+  // Prim3($1,$3,$5)
+  | Access PLUSASSIGN Expr              { OpAssign("+", $1, $3)    }
+  | Access MINUSASSIGN Expr             { OpAssign("-", $1, $3)   }
+  | Access TIMESASSIGN Expr             { OpAssign("*", $1, $3)   }
+  | Access DIVASSIGN Expr               { OpAssign("/", $1, $3)   }
+  | Access MODASSIGN Expr               { OpAssign("%", $1, $3)   }
   
   | PRINT Expr                          { Prim1("printi", $2) }
+  // | PRINT_CHAR Expr                          { Prim1("printi", $2) }
   // printi 只有这里可以调用吗 外面不行。。
   // print int 然后第二个参数
   // print 会返回这个值本身 int char 返回没什么问题 但是str 返回什么
   // 参考c语言的print 的话 应该是返回1 成功 0 失败吧，其实不返回也没什么
   // printf 的返回 小问题罢了 这里我觉得别管了
   | PRINTLN                             { Prim1("printc", nl) }
-  | PRINTF LPAR CSTSTRING PrintfArgs RPAR  { 
-    printf "调用printf\n";
-    Printf($3, $4)
-    }
+  // | PRINTF LPAR CSTSTRING PrintfArgs RPAR  { 
+  //   printf "调用printf\n";
+  //   Printf($3, $4)
+  //   }
+  | PRINTF LPAR CSTSTRING PrintfArgs RPAR  { Printf($3, $4) }
+    // PRINTF LPAR CSTSTRING $3 PrintfArgs $4 RPAR
     // | "printString"   -> PRINT_STRING
   | PRINT_STRING Expr   { Prim1("printc", $2)}
   | PRINT_CHAR  Expr   { Prim1("printc", $2)}
@@ -213,12 +349,27 @@ ExprNotAccess:
   | Expr LT    Expr                     { Prim2("<",  $1, $3) }
   | Expr GE    Expr                     { Prim2(">=", $1, $3) }
   | Expr LE    Expr                     { Prim2("<=", $1, $3) }
+  | Expr AMP Expr                       { Prim2("&", $1, $3)      }
+  | Expr BITOR  Expr                    { Prim2("|", $1, $3) }
+  | Expr BITXOR  Expr                   { Prim2("^", $1, $3) }
+  | Expr BITLEFT  Expr                  { Prim2("<<", $1, $3) }
+  | Expr BITRIGHT  Expr                 { Prim2(">>", $1, $3) }
+  | BITNOT  Expr                        { Prim1("~", $2) }
   | Expr SEQAND Expr                    { Andalso($1, $3)     }
+  // | LPAR TO_CHAR RPAR Expr                 { ToChar($4) }
+  | LPAR CHAR RPAR Expr                 { ToChar($4) }
+  // (char)var 
+  | LPAR INT RPAR Expr                 { ToInt($4) }
+  // (char)expr
   | Expr SEQOR  Expr                    { Orelse($1, $3)      }
   // | ConstString SEQOR  Expr                    { Orelse($1, $3)      }
 ;
 
 PrintfArgs:
+    /* empty */                         { [] }
+  | COMMA Expr                          { [$2] }
+  // 空的 和一个参数的情况不能不写
+  
 	// 连接两个列表。 @
   // Printf("%d",intArg,charArg);
   // 递归的 后面会有很多参数
@@ -232,10 +383,18 @@ AtExprNotAccess:
     // AMP Access  , &x
     // (3)   
     Const                               { CstI $1             }
+    // 不能给一个const int 赋值，因为他本身就是定义好的
+    // 只能给一个变量赋值
+    // int intVal=2; 比如这里的 intVal是左值，2 是一个const int 
+    // 他不可能是 2=3 ，2 是不能为左值的 
+    // 访问 Access，但是为啥 他是访问 一个右值难道不能被访问吗
+    // 被取出值来 难道不对吗 可能我的理解有问题
   | LPAR ExprNotAccess RPAR             { $2                  } 
   | AMP Access                          { Addr $2             } // 取地址
   // | ConstChar                           { CstChar($1) }
   | ConstChar                           { CstChar $1 }
+  | ConstFloat                          { ConstFloat($1)      }
+  // Absyn.fs 调用了这个文件
   // 表达式去取
   // 这里不写的话 就不会去解析了吧
   | ConstString { CstString($1) }      
@@ -248,6 +407,7 @@ Access:    //可以为左值的情况
   | TIMES Access                        { AccDeref (Access $2)}  // 指针  *x 
   | TIMES AtExprNotAccess               { AccDeref $2         }
   | Access LBRACK Expr RBRACK           { AccIndex($1, $3)    }   
+  | Access POINT Access                 { AccStruct($1, $3) }
 ;
 
 Exprs:
@@ -263,15 +423,26 @@ Exprs1:
 Const:
     CSTINT                              { $1       }
   | CSTBOOL                             { $1       }
-  | MINUS CSTINT                        { - $2     }
+  | MINUS CSTINT                        { 
+    printfn "MINUS CSTINT"
+    -$2     }
+  // | MINUS CSTINT                        { - $2     }
+    // D:\school\compile\plzoofs\microc\CPar.fsy(411,28): error FS0001: 
+    // 类型“int”与类型“unit”不匹配 [D:\school\compile\plzoofs\microc\microc.fsproj]
   | NULL                                { -1       }
   // | CSTSTRING                              { $1       }
-  //  D:\proj\compile\plzoofs\microc\CPar.fsy(236,67): error FS0001: 此表达式应具有类型    “int”    而此处具有类型    “string” [D:\proj\compile\plzoofs\microc\interpc.fsproj]
+  //  D:\proj\compile\plzoofs\microc\CPar.fsy(236,67): error FS0001:
+  //  此表达式应具有类型    “int”    而此处具有类型    “string” [D:\proj\compile\plzoofs\microc\interpc.fsproj]
 ;
 
 ConstString:
     CSTSTRING                           { $1       }
 ;
+
+ConstFloat:
+    CSTFLOAT                            { $1       }
+; 
+
 
 ConstChar:
   CSTCHAR                               { $1       }
@@ -280,5 +451,10 @@ ConstChar:
 Type:
     INT                                 { TypI     }
   | CHAR                                { TypC     }
+  // | TO_CHAR                                { TypC     }
   | STRING                              { TypString     }
+  | FLOAT                               { TypFloat     }
+  | BOOL                                { TypBool    }
+  | STRUCT NAME                         { TypStruct $2 }
+  // 定义的类型 可以在 interp 声明
 ;
